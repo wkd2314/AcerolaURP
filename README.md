@@ -10,7 +10,7 @@ Unity 2022.3.0, URP version is 14.0.7
 
 # Finished
 
-
+[Elden ring star](https://www.youtube.com/watch?v=IMiiUEG-sLQ&t=313s)
 
 # Currently..
 
