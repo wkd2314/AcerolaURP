@@ -14,6 +14,6 @@ Unity 2022.3.0, URP version is 14.0.7
 
 # Currently..
 
-![image](https://github.com/wkd2314/AcerolaURP/assets/25860861/99ce6bbd-62b2-4749-ba81-3e9c783f8231)
+![image](https://github.com/wkd2314/AcerolaURP/assets/25860861/a6f8f912-604b-4885-acd2-22c3b66bf9fb)
 
 working on smoke
