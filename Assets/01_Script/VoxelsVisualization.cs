@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using static System.Runtime.InteropServices.Marshal;
 
 [ExecuteAlways]
@@ -11,7 +12,11 @@ public class VoxelsVisualization : MonoBehaviour
     [SerializeField] private Mesh instancedMesh;
     [SerializeField] private Vector3Int boundVector = new Vector3Int(30, 5, 30);
     [SerializeField] private Vector3 ellipsoidSize = new Vector3(1, 1, 1);
-    [SerializeField][Range(0.01f, 1)] private float voxelSize = 0.5f;
+    [FormerlySerializedAs("voxelSize")]
+    [SerializeField][Range(0.01f, 1)] private float maximumVoxelSize = 0.5f;
+
+    [Header("Animation Settings")]
+    [SerializeField] private float growthSpeed = 1f;
 
     private int instanceCount;
     private Bounds bounds;
@@ -27,6 +32,8 @@ public class VoxelsVisualization : MonoBehaviour
     private Camera mainCam;
     private Vector3 smokeOrigin;
 
+    private float timer;
+
     private struct VoxelData
     {
         public Vector3 position;
@@ -36,19 +43,20 @@ public class VoxelsVisualization : MonoBehaviour
     private void Start()
     {
         mainCam = Camera.main;
+        timer = 0f;
     }
     private void OnEnable()
     {
         if (!instancedMaterial) instancedMaterial = CoreUtils.CreateEngineMaterial("Hidden/Voxel");
         
-        Vector3Int instanceBound = Vector3Int.FloorToInt((Vector3)boundVector / voxelSize);
+        Vector3Int instanceBound = Vector3Int.FloorToInt((Vector3)boundVector / maximumVoxelSize);
         instanceCount = instanceBound.x * instanceBound.y * instanceBound.z;
         voxelsBuffer = new ComputeBuffer(instanceCount, SizeOf(typeof(VoxelData)));
         argsBuffer = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
         bounds = new Bounds(smokeOrigin, boundVector);
 
         Vector4 boundAndSize = (Vector3)instanceBound;
-        boundAndSize.w = voxelSize;
+        boundAndSize.w = maximumVoxelSize;
         
         Shader.SetGlobalVector("_SmokeOrigin", smokeOrigin);
         
@@ -74,7 +82,7 @@ public class VoxelsVisualization : MonoBehaviour
         argsBuffer.SetData(args);
         
         instancedMaterial.SetBuffer(VoxelsBuffer, voxelsBuffer);
-        instancedMaterial.SetFloat("_VoxelSize", voxelSize);
+        instancedMaterial.SetFloat("_VoxelSize", maximumVoxelSize);
     }
 
     private void Update()
@@ -97,9 +105,17 @@ public class VoxelsVisualization : MonoBehaviour
                 if (Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out var hitInfo))
                 {
                     smokeOrigin = hitInfo.point;
+                    timer = 0f;
                 }
             }
 
+            if (timer < 1f)
+            {
+                instancedMaterial.SetFloat("_VoxelSize", Mathf.Lerp(0, maximumVoxelSize, 
+                    EasingUtils.EaseInOutQuad(timer)));
+                timer += growthSpeed * Time.deltaTime;
+            }
+            
             if (smokeOrigin != Vector3.zero)
             {
                 Shader.SetGlobalVector("_SmokeOrigin", smokeOrigin);

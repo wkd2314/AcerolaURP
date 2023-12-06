@@ -2,15 +2,31 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public static class CoroutineCommon
+
+/// <summary>
+/// makes it possible to call lambda function
+/// inside StartCoroutine
+/// </summary>
+public static class CoroutineUtil
 {
     private static readonly MonoBehaviour Behaviour;
 
-    static CoroutineCommon()
+    static CoroutineUtil()
     {
         var gameObject = new GameObject("CoroutineCommon");
         GameObject.DontDestroyOnLoad(gameObject);
         Behaviour = gameObject.AddComponent<MonoBehaviour>();
+    }
+    
+    public static void CallLambda(Action action)
+    {
+        Behaviour.StartCoroutine(EnumerateFunction(action));
+    }
+    
+    static IEnumerator EnumerateFunction(Action action)
+    {
+        action();
+        yield break;
     }
 
     public static void CallWaitForOneFrame(Action action)
