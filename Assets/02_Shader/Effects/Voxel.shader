@@ -23,7 +23,7 @@ Shader "Hidden/Voxel"
         struct Varyings 
         {
             float4 positionCS 	: SV_POSITION;
-            float3 color : TEXCOORD0;
+            float4 color : TEXCOORD0;
             // UNITY_VERTEX_INPUT_INSTANCE_ID
             // UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -31,7 +31,7 @@ Shader "Hidden/Voxel"
         struct VoxelData
         {
             float3 position;
-            float3 color;
+            float4 color;
         };
 
         CBUFFER_START(UnityPerMaterial)
@@ -71,8 +71,9 @@ Shader "Hidden/Voxel"
         {
             // UNITY_SETUP_INSTANCE_ID(input);
 			// UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+            clip(input.color.a - 0.5);
             
-            return float4(input.color, 1.0f);
+            return input.color;
         }
 
         ENDHLSL

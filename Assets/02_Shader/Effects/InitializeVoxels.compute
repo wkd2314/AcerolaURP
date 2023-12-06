@@ -6,11 +6,11 @@
 struct VoxelData
 {
     float3 position;
-    float3 color;
+    float4 color;
 };
 // need total count and start position!
 
-RWStructuredBuffer<VoxelData> _Voxels;
+RWStructuredBuffer<VoxelData> _VoxelsBuffer;
 float4 _BoundAndSize;
 float3 _EllipsoidSize;
 // float3 _SmokeOrigin;
@@ -33,9 +33,9 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     
     
-    voxel.color = float3(Random(id.x + voxelCoord.x), Random(id.x +voxelCoord.y), Random(id.x +voxelCoord.z));
+    voxel.color = float4(Random(id.x + voxelCoord.x), Random(id.x +voxelCoord.y), Random(id.x +voxelCoord.z), 1.0);
 
-    if(length(originToPoint) > 1) return;;
+    if(length(originToPoint) > 1) voxel.color.a = 0;
 
-    _Voxels[id.x] = voxel;
+    _VoxelsBuffer[id.x] = voxel;
 }

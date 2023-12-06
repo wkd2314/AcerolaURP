@@ -894,6 +894,11 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7347735734725360419, guid: 8fc30d50ae096f54abbda8dd0cb824aa,
+        type: 3}
+      propertyPath: growthSpeed
+      value: 0.54
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1139,7 +1144,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1720881464}
   m_Layer: 0
-  m_Name: Smoke
+  m_Name: SmokeTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
