@@ -1,0 +1,62 @@
+#pragma kernel InitializeStars
+
+#include "Random.hlsl"
+
+#define PI 3.14159265358979
+
+struct StarData {
+    float4 position;
+    float4x4 rsMat;
+};
+
+RWStructuredBuffer<StarData> _Stars;
+float _Radius;
+float _StarScale;
+
+[numthreads(256,1,1)]
+void InitializeStars(uint3 id : SV_DispatchThreadID) {
+    StarData star;
+    
+    float theta = Random(id.x + 1) * 2.0 * PI; // horizontal
+    // number is chosen over the cosine of the value, instead of the angle itself. 
+    // Then, the inverse of this is taken to find the azimuthal angle. This gets red of the axial streak.
+    float phi = acos(Random(id.x + 2) * 2.0 - 1.0); // vertical
+    float r = pow(Random(id.x + 3), 1.0f / 3.0f);
+    
+    float sinTheta = sin(theta);
+    float cosTheta = cos(theta);
+    float sinPhi = sin(phi);
+    float cosPhi = cos(phi);
+
+    float x = r * sinPhi * cosTheta;
+    float y = r * sinPhi * sinTheta;
+    float z = r * cosPhi;
+
+    float3 dir = float3(x, y, z);
+    star.position = float4(dir, 1.0f);
+    star.position.xyz *= _Radius;
+    
+    float yaw = Random(star.position.x) * 2.0f * PI;
+    float pitch = Random(star.position.y) * 2.0f * PI;
+    float roll = Random(star.position.z) * 2.0f * PI;
+
+    float4x4 rotationMat = {
+        cos(yaw) * cos(pitch), cos(yaw) * sin(pitch) * sin(roll) - sin(yaw) * cos(roll), cos(yaw) * sin(pitch) * cos(roll) + sin(yaw) * sin(roll), 0,
+        sin(yaw) * cos(pitch), sin(yaw) * sin(pitch) * sin(roll) + cos(yaw) * cos(roll), sin(yaw) * sin(pitch) * cos(roll) - cos(yaw) * sin(roll), 0,
+        -sin(pitch), cos(pitch) * sin(roll), cos(pitch) * cos(roll), 0,
+        0, 0, 0, 1
+    };
+
+    float4x4 scaleMat = {
+        _StarScale, 0, 0, 0,
+        0, _StarScale, 0, 0,
+        0, 0, _StarScale, 0,
+        0, 0, 0, 1
+    };
+
+    float4x4 rsMat = mul(rotationMat, scaleMat);
+    
+    star.rsMat = rsMat;
+
+    _Stars[id.x] = star;
+}
