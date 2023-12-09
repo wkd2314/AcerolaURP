@@ -1,0 +1,68 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSClear
+#pragma kernel CSVoxelizeMesh
+#pragma kernel CSSeed
+#pragma kernel CSFillStep
+
+#include "VoxelizeShared.hlsl"
+
+[numthreads(256,1,1)]
+void CSClear (uint3 id : SV_DispatchThreadID)
+{
+    _StaticVoxels[id.x] = 0;
+}
+
+[numthreads(256,1,1)]
+void CSVoxelizeMesh (uint3 id : SV_DispatchThreadID)
+{
+    float3 centerPos = (to3D(id.x) + 0.5) * _VoxelSize - _BoundExtent;
+    // _Instances[id.x].position = centerPos;
+
+    // _BoundCenter is transform.localPosition.
+    // don't put "centerPos += _BoundCenter;" before position setup because
+    // it is considered in vertex position shader  (TransformObjectToWorld(posisionOS)).
+    // here we just use it in order to get the final world position of gridPoint.
+    centerPos += _BoundCenter; 
+    float halfVoxelSize = _VoxelSize / 2.0;
+    
+    AABB aabb;
+    aabb.center = centerPos;
+    aabb.extents = halfVoxelSize * (1 + _IntersectionBias);
+
+    
+    bool intersects = false;
+    // Object Count * Per Obj Triangle * Cell Grid Count(AABB) * 13 Axis...
+    for(int i = 0; i < _TrianglesCount; i+=3)
+    {
+        Triangle tri;
+        tri.a = mul(_ObjectToWorld, float4(_Vertices[_Triangles[i]], 1.0f)).xyz;
+        tri.b = mul(_ObjectToWorld, float4(_Vertices[_Triangles[i+1]], 1.0f)).xyz;
+        tri.c = mul(_ObjectToWorld, float4(_Vertices[_Triangles[i+2]], 1.0f)).xyz;
+        
+        intersects = IntersectsTriangleAabb(tri, aabb);
+        if(intersects)
+        {
+            _StaticVoxels[id.x] = 1;
+        }
+    }
+}
+
+[numthreads(1,1,1)]
+void CSSeed (uint3 id : SV_DispatchThreadID)
+{
+    // world pos 받아서 각각 coord 구해야됨.
+    float3 seed = _SmokeOrigin - _BoundCenter + _BoundExtent;
+    seed /= _VoxelSize;
+    
+    _SmokeVoxels[to1D(seed)] = _MaxFillSteps;
+}
+
+[numthreads(256,1,1)]
+void CSFillStep (uint3 id : SV_DispatchThreadID)
+{
+    // for fill steps -> flood fill
+    int voxel = _SmokeVoxels[id.x];
+    int staticVoxel = _StaticVoxels[id.x];
+
+    
+}

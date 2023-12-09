@@ -1,0 +1,22 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel VoxelizeMesh
+
+RWStructuredBuffer<float4> _VoxelGridPoints;
+
+float4 _BoundsMin; // center - bound extent
+float _CellHalfSize;
+int _GridWidth;
+int _GridHeight;
+int _GridDepth;
+
+[numthreads(1,1,1)]
+void VoxelizeMesh (uint3 id : SV_DispatchThreadID)
+{
+    float cellSize = _CellHalfSize * 2.0;
+
+    _VoxelGridPoints[id.x + _GridWidth * (id.y + _GridHeight * id.z)] =
+        float4 (_BoundsMin.x + id.x * cellSize,
+        	_BoundsMin.y + id.y * cellSize,
+        	_BoundsMin.z + id.z * cellSize, 1.0f);
+	
+}
